@@ -215,7 +215,7 @@ def generate_followup_questions(answer_text: str, api_key: str, model: str = MOD
 # Streamlit UI
 # -----------------------
 st.set_page_config(page_title="PDF Q&A", layout="wide")
-st.title("📄 PDF Q&A — Updated with .env support")
+st.title("📄 PDF Q&A")
 
 # Sidebar: API key & settings
 st.sidebar.header("Settings & API")
