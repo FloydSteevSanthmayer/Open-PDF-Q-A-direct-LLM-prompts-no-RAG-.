@@ -1,4 +1,4 @@
-#Open-PDF-Q-A-direct-LLM-prompts-no-RAG-.
+# Open-PDF-Q-A-direct-LLM-prompts-no-RAG-.
 
 A professional, developer-focused Retrieval-Augmented Generation (RAG) pipeline for question answering over PDF documents.  
 This project demonstrates end‑to‑end ingestion, text extraction, chunking with provenance, local embedding generation, vector retrieval with FAISS, and OpenRouter‑compatible LLM prompting.
