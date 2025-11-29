@@ -1,0 +1,1 @@
+This folder contains rendered diagrams. The flowchart image is at flowchart_colored.png.
