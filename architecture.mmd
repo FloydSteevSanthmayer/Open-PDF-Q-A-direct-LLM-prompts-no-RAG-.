@@ -1,0 +1,17 @@
+flowchart TD
+    subgraph UI
+      A[Streamlit App]
+    end
+    subgraph Backend
+      B[PDF extraction (PyMuPDF)]
+      C[Chunking & Summarization]
+      D[OpenRouter API]
+    end
+    subgraph Infra
+      E[Docker]
+      F[CI (GitHub Actions)]
+    end
+
+    A --> B --> C --> D
+    A --> F
+    A --> E

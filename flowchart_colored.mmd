@@ -1,0 +1,17 @@
+flowchart LR
+    A([Upload PDF]):::start --> B[Extract Text with PyMuPDF]:::process
+    B --> C{Text Extracted?}:::decision
+    C -- "Yes" --> D[Structure Content into Sections]:::process
+    C -- "No" --> E([Show Error Message]):::error
+    D --> F[User Asks Question]:::input
+    F --> G[Send Prompt to OpenRouter API]:::process
+    G --> H[Receive Answer]:::process
+    H --> I[Generate Follow-up Questions]:::process
+    I --> J([Display Results]):::end
+
+    classDef start fill:#4CAF50,stroke:#2E7D32,color:white;
+    classDef process fill:#42A5F5,stroke:#1565C0,color:white;
+    classDef decision fill:#FFB300,stroke:#FF6F00,color:black;
+    classDef error fill:#E53935,stroke:#B71C1C,color:white;
+    classDef input fill:#8E24AA,stroke:#4A148C,color:white;
+    classDef end fill:#43A047,stroke:#1B5E20,color:white;
