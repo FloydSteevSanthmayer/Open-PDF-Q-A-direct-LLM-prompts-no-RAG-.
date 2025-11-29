@@ -2,6 +2,7 @@ import os
 import re
 import json
 from typing import Dict, List
+
 import streamlit as st
 import requests
 import fitz  # PyMuPDF
@@ -23,6 +24,7 @@ except Exception:
 API_URL_DEFAULT = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_DEFAULT = "openai/gpt-3.5-turbo-0613"
 
+
 # -----------------------
 # Utility: HTTP session with retries
 # -----------------------
@@ -41,6 +43,7 @@ def create_requests_session(retries: int = 3, backoff_factor: float = 0.3) -> re
     session.mount("http://", adapter)
     return session
 
+
 # -----------------------
 # API key resolution
 # -----------------------
@@ -56,6 +59,7 @@ def get_api_key_from_secrets_or_env() -> str:
         # st.secrets may not be dict-like in all environments; ignore and fallback
         pass
     return os.environ.get("OPENROUTER_API_KEY", "") or os.environ.get("OPENROUTER_KEY", "")
+
 
 # -----------------------
 # PDF extraction & structuring
@@ -187,7 +191,10 @@ def query_pdf_content(sections: Dict[str, str], question: str, api_key: str, mod
         "content": "You are a helpful assistant. Answer concisely and, where appropriate, mention the section heading you used.",
     }
     if len(chunks) == 1:
-        user_prompt = f"Document content:\n\n{chunks[0]}\n\nQuestion: {question}\nAnswer concisely and cite section headings if relevant."
+        user_prompt = (
+            f"Document content:\n\n{chunks[0]}"
+            f"\n\nQuestion: {question}\nAnswer concisely and cite section headings if relevant."
+        )
         messages = [system_msg, {"role": "user", "content": user_prompt}]
         resp = call_openrouter(messages, api_key=api_key, model=model)
         return safe_json_get_choice_content(resp)
@@ -195,7 +202,11 @@ def query_pdf_content(sections: Dict[str, str], question: str, api_key: str, mod
     # For multi-chunk docs, summarize, then ask final question on summaries
     summaries = summarize_chunks(chunks, api_key=api_key, model=model)
     combined_summary = "\n\n".join(f"Summary {i+1}: {s}" for i, s in enumerate(summaries))
-    final_prompt = f"Based on the combined summaries below, answer the question concisely and indicate which summary/section(s) support the answer.\n\n{combined_summary}\n\nQuestion: {question}"
+    final_prompt = (
+        "Based on the combined summaries below, answer the question concisely "
+        "and indicate which summary/section(s) support the answer.\n\n"
+        f"{combined_summary}\n\nQuestion: {question}"
+    )
     resp = call_openrouter([system_msg, {"role": "user", "content": final_prompt}], api_key=api_key, model=model)
     return safe_json_get_choice_content(resp)
 
@@ -203,7 +214,11 @@ def query_pdf_content(sections: Dict[str, str], question: str, api_key: str, mod
 def generate_followup_questions(answer_text: str, api_key: str, model: str = MODEL_DEFAULT) -> List[str]:
     """Ask the model to produce 3 short follow-up questions (one per line)."""
     system_msg = {"role": "system", "content": "You are a concise question generator."}
-    prompt = f"Based on the following answer, generate 3 brief, clear follow-up questions (one per line, no numbering):\n\n{answer_text}"
+    prompt = (
+        "Based on the following answer, generate 3 brief, clear follow-up questions "
+        "(one per line, no numbering):\n\n"
+        f"{answer_text}"
+    )
     resp = call_openrouter([system_msg, {"role": "user", "content": prompt}], api_key=api_key, model=model)
     text = safe_json_get_choice_content(resp)
     raw_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
@@ -215,7 +230,7 @@ def generate_followup_questions(answer_text: str, api_key: str, model: str = MOD
 # Streamlit UI
 # -----------------------
 st.set_page_config(page_title="PDF Q&A", layout="wide")
-st.title("📄 PDF Q&A")
+st.title("PDF Q&A — Updated with .env support")
 
 # Sidebar: API key & settings
 st.sidebar.header("Settings & API")
@@ -231,7 +246,8 @@ api_url = st.sidebar.text_input("API URL", value=API_URL_DEFAULT)
 
 st.sidebar.markdown(
     """
-**How to set the API key**
+How to set the API key:
+
 - Local: add `OPENROUTER_API_KEY=sk-...` to a `.env` file in the repo root (do not commit).
 - Streamlit Cloud: set in App Secrets.
 - CI/CD: set as repository secret (GitHub Actions).
@@ -248,15 +264,18 @@ if uploaded_file is not None:
     else:
         sections = structure_pdf_content(raw_text)
         st.success("PDF processed successfully!")
+
         st.subheader("Document preview")
         preview = raw_text[:4000].strip() + ("..." if len(raw_text) > 4000 else "")
         st.text_area("Extracted text (preview)", preview, height=200)
-        st.write("Detected section headings:", list(sections.keys())[:30])
 
         question = st.text_input("Ask a question about the document:")
         if question:
             if not api_key:
-                st.error("No API key available. Set OPENROUTER_API_KEY in .env, Streamlit secrets, or paste a temporary key in sidebar.")
+                st.error(
+                    "No API key available. Set OPENROUTER_API_KEY in .env, Streamlit secrets, "
+                    "or paste a temporary key in sidebar."
+                )
             else:
                 with st.spinner("Querying model..."):
                     try:
@@ -265,7 +284,9 @@ if uploaded_file is not None:
                         st.write(answer)
                         with st.expander("Follow-up Questions"):
                             try:
-                                followups = generate_followup_questions(answer, api_key=api_key, model=model_name)
+                                followups = generate_followup_questions(
+                                    answer, api_key=api_key, model=model_name
+                                )
                                 for idx, fq in enumerate(followups, start=1):
                                     st.write(f"{idx}. {fq}")
                             except Exception as e:
